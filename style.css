@@ -1,0 +1,41 @@
+body {
+    background-color: #92a7ce;
+}
+
+.header, .content {
+    background-color: #668bd1;
+    margin: 20px 10px;
+    padding: 10px 5px;
+}
+
+.header h1 {
+    color: black;
+    font: 32px verdana;
+    text-decoration: underline;
+    text-align: center;
+}
+
+.board {
+    border-collapse: collapse;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.board td {
+    border: 3px solid black;
+    width: 70px;
+    height: 70px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 50px;
+}
+
+.board th {
+    text-align: center;
+    vertical-align: middle;
+    width: 30px;
+}
+
+.xlabel th{
+    padding-top: 10px;
+}
