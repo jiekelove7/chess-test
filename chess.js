@@ -29,6 +29,23 @@ const keyFromPiece = {
     "♚" : "k",
 }
 
+const COLOURS = {
+    WHITE : "white",
+    BLACK : "black"
+}
+
+const SQUARES = {
+    LIGHT : "#3de482",
+    DARK : "#0e9747",
+    HIGHLIGHTED : "white"
+}
+
+// Global Variables
+let pieceSelected = "";
+let cellSelected = "";
+let turn = COLOURS.WHITE;
+
+
 function isNum(number) {
     return !isNaN(number);
 }
@@ -46,18 +63,19 @@ function loadBoard() {
                 clickCell(this);
             }
             if(counter % 2 == 0)
-                cell.style.backgroundColor = "#3de482";
+                cell.style.backgroundColor = SQUARES.LIGHT;
             else
-                cell.style.backgroundColor = "#0e9747";
+                cell.style.backgroundColor = SQUARES.DARK;
             if(j != 7)
                 counter ++;
         }
     }
-
-    loadFEN("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R");
+    // FEN string of default starting position
+    loadFEN("2R5/4bppk/1p1p4/5R1P/4PQ2/5P2/r4q1P/7K");
+    turn = COLOURS.WHITE;
 }
 
-function clickCell(cell) {
+function debugClickCell(cell) {
     var s = "This cell contains the piece: ";
     // const [x, y] = cell.id.split(",")
     let p = cell.innerHTML;
@@ -70,7 +88,108 @@ function clickCell(cell) {
     return true;
 }
 
+function clickCell(cell) {
+    var errno = ["Cell is empty!", "Wrong colour!", "Invalid move!"]
+    var errsq = document.getElementById("debug");
+    const EMPTY = 0;
+    const COLOUR = 1;
+    const INVALID = 2;
+    
+    // Clear debug
+    errsq.innerHTML = "&nbsp;";
 
+    let p = cell.innerHTML;
+    if (!isPieceSelected()) { // Select a piece
+
+        // Square is unoccupied
+        if(p === "") {
+            errsq.innerHTML = errno[EMPTY];
+            return;
+        }
+
+        // Is it your turn?
+        if(turn != colourOfPiece(p)) {
+            errsq.innerHTML = errno[COLOUR];
+            return;
+        }
+        // document.getElementById("debug").innerHTML = resetBackground(cell.id);
+
+        // Select the piece and the cell
+        pieceSelected = p;
+        cellSelected = cell.id;
+        // Set background to show it has been selected
+        cell.style.backgroundColor = "white";
+        
+        
+    } else { // Select a cell to move
+        
+        // temp - Invalid move iff square is occupied
+        if(isValidMove("", "", cell.id)) {
+            document.getElementById(cellSelected).innerHTML = "";
+            resetBackground(cellSelected);
+            cell.innerHTML = pieceSelected;
+            pieceSelected = "";
+            cellSelected = "";
+            advanceTurn();
+        }  
+    }
+}
+
+function advanceTurn() {
+    if(turn == COLOURS.WHITE) turn = COLOURS.BLACK;
+    else turn = COLOURS.WHITE;
+}
+
+/**
+ * @returns true if a piece is selected
+ */
+function isPieceSelected() {
+    return pieceSelected != "";
+}
+
+/**
+ * 
+ * @param {PiecesType} piece 
+ * @param {string} start 
+ * @param {string} end 
+ */
+function isValidMove(piece, start, end) {
+    return (document.getElementById(end).innerHTML == "");
+}
+
+/**
+ * @param {string} piece input piece
+ * @returs the colour of the input piece
+ */
+function colourOfPiece(piece) {
+    if(piece in keyFromPiece) {
+        piece = keyFromPiece[piece];
+    }
+    return (isWhite(piece) ? COLOURS.WHITE : COLOURS.BLACK);
+}
+
+// Capital means white
+const isWhite = str => /^[A-Z]+$/.test(str);
+
+/**
+ *  Naiive solution of 'un-highlighting' a cell
+ *  @param {string} cellId 
+ */
+function resetBackground(cellId) {
+    let sum = +cellId[0] + +cellId[2];
+    if(sum % 2 == 0) {
+        document.getElementById(cellId).style.backgroundColor = SQUARES.DARK;
+    } else {
+        document.getElementById(cellId).style.backgroundColor = SQUARES.LIGHT;
+    }
+}
+
+/**
+ * Converts FEN string to represent a position on the board.
+ * Assumes a valid FEN string is entered
+ * @param {string} FEN FEN string of position of pieces ONLY
+ * @returns true - assumes no errors during processing
+ */
 function loadFEN(FEN) {
     let counter = 0;
     for(var i = 0; i < nRows; i++) {
