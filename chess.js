@@ -122,16 +122,26 @@ function clickCell(cell) {
         
         
     } else { // Select a cell to move
-        
-        // temp - Invalid move iff square is occupied
-        if(isValidMove("", "", cell.id)) {
-            document.getElementById(cellSelected).innerHTML = "";
+
+        if(p == "" || colourOfPiece(p) != turn) {
+            // temp - Invalid move iff square is occupied
+            if(isValidMove("", "", cell.id)) {
+                document.getElementById(cellSelected).innerHTML = "";
+                resetBackground(cellSelected);
+                cell.innerHTML = pieceSelected;
+                pieceSelected = "";
+                cellSelected = "";
+                advanceTurn();
+                return;
+            }  
+        } else {
+            // Reselect a piece?
             resetBackground(cellSelected);
-            cell.innerHTML = pieceSelected;
-            pieceSelected = "";
-            cellSelected = "";
-            advanceTurn();
-        }  
+            pieceSelected = p;
+            cellSelected = cell.id;
+            cell.style.backgroundColor = "white";
+        }
+        
     }
 }
 
