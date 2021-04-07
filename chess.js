@@ -119,28 +119,38 @@ function clickCell(cell) {
         cellSelected = cell.id;
         // Set background to show it has been selected
         cell.style.backgroundColor = "white";
+        return;
         
         
     } else { // Select a cell to move
 
-        if(p == "" || colourOfPiece(p) != turn) {
-            // temp - Invalid move iff square is occupied
-            if(isValidMove("", "", cell.id)) {
-                document.getElementById(cellSelected).innerHTML = "";
-                resetBackground(cellSelected);
-                cell.innerHTML = pieceSelected;
-                pieceSelected = "";
-                cellSelected = "";
-                advanceTurn();
-                return;
-            }  
-        } else {
-            // Reselect a piece?
+        // Deselect piece
+        if(cell.id == cellSelected) {
+            resetBackground(cellSelected)
+            pieceSelected = ""
+            cellSelected = ""
+            return;
+        }
+
+        // Reselect a piece
+        if(p != "" && colourOfPiece(p) == turn) {
             resetBackground(cellSelected);
             pieceSelected = p;
             cellSelected = cell.id;
             cell.style.backgroundColor = "white";
+            return;
         }
+
+        // Is it a legal move?
+        if(isValidMove("", cellSelected, cell.id)) {
+            document.getElementById(cellSelected).innerHTML = "";
+            resetBackground(cellSelected);
+            cell.innerHTML = pieceSelected;
+            pieceSelected = "";
+            cellSelected = "";
+            advanceTurn();
+            return;
+        }  
         
     }
 }
@@ -160,15 +170,22 @@ function isPieceSelected() {
 /**
  * 
  * @param {PiecesType} piece 
- * @param {string} start 
- * @param {string} end 
+ * @param {string} start id of start cell
+ * @param {string} end id of end cell
  */
 function isValidMove(piece, start, end) {
-    return (document.getElementById(end).innerHTML == "");
+    target = document.getElementById(end).innerHTML;
+    if(target == "") return true;
+    
+    if(colourOfPiece(target) != turn) {
+        return true;
+    }
+
+    return false;
 }
 
 /**
- * @param {string} piece input piece
+ * @param {string} piece input piece can be in either form
  * @returs the colour of the input piece
  */
 function colourOfPiece(piece) {
