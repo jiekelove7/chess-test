@@ -29,6 +29,13 @@ const keyFromPiece = {
     "♚" : "k",
 }
 
+const MOVES = {
+    ROOK : [[-1, 0], [0, 1], [1, 0], [0, -1]],
+    KNIGHT : [[-2, 1], [-1, 2], [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1]],
+    BISHOP: [[-1, 1], [1, 1], [1, -1], [-1, -1]],
+    KING: [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]
+    }
+
 const COLOURS = {
     WHITE : "white",
     BLACK : "black"
@@ -37,7 +44,7 @@ const COLOURS = {
 const SQUARES = {
     LIGHT : "#3de482",
     DARK : "#0e9747",
-    HIGHLIGHTED : "white"
+    HIGHLIGHTED : "#0089fa"
 }
 
 // Global Variables
@@ -50,7 +57,7 @@ function isNum(number) {
     return !isNaN(number);
 }
 
-function loadBoard() {
+function initBoard() {
     let board = document.getElementById("board");
     let counter = 0; // Used for alternating black squares
 
@@ -72,7 +79,7 @@ function loadBoard() {
     }
     // FEN string of default starting position
     loadFEN("2R5/4bppk/1p1p4/5R1P/4PQ2/5P2/r4q1P/7K");
-    turn = COLOURS.WHITE;
+    turn = COLOURS.WHITE; // White starts first
 }
 
 function debugClickCell(cell) {
@@ -118,7 +125,7 @@ function clickCell(cell) {
         pieceSelected = p;
         cellSelected = cell.id;
         // Set background to show it has been selected
-        cell.style.backgroundColor = "white";
+        cell.style.backgroundColor = SQUARES.HIGHLIGHTED;
         return;
         
         
@@ -137,7 +144,7 @@ function clickCell(cell) {
             resetBackground(cellSelected);
             pieceSelected = p;
             cellSelected = cell.id;
-            cell.style.backgroundColor = "white";
+            cell.style.backgroundColor = SQUARES.HIGHLIGHTED;
             return;
         }
 
@@ -151,6 +158,10 @@ function clickCell(cell) {
             advanceTurn();
             return;
         }  
+
+        // Invalid move
+        errsq.innerHTML = errno[INVALID];
+        return;
         
     }
 }
@@ -185,6 +196,31 @@ function isValidMove(piece, start, end) {
 }
 
 /**
+ * @returns true if parameters signify a calid square
+ */
+function isValidSquare() {
+    let x = -1
+    let y = -1
+    // Cell.id was inputted
+    if (arguments.length == 1) {
+        let s = arguments[0].split(",");
+        x = s[0];
+        y = s[1];
+    }
+    // Coordinates of the square was inputted
+    if (arguments.length == 2) {
+        x = arguments[0];
+        y = arguments[1];
+    }
+
+    if(x < 1 || x > 8 || y < 1 || y > 8) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+/**
  * @param {string} piece input piece can be in either form
  * @returs the colour of the input piece
  */
@@ -214,6 +250,7 @@ function resetBackground(cellId) {
 /**
  * Converts FEN string to represent a position on the board.
  * Assumes a valid FEN string is entered
+ * Currently only supports position, turn order and castelling status not implemented
  * @param {string} FEN FEN string of position of pieces ONLY
  * @returns true - assumes no errors during processing
  */
