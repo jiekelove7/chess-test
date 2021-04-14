@@ -51,6 +51,8 @@ const SQUARES = {
 let pieceSelected = "";
 let cellSelected = "";
 let turn = COLOURS.WHITE;
+let gameOver = false;
+let possibleMoves = [];
 
 
 function isNum(number) {
@@ -78,7 +80,8 @@ function initBoard() {
         }
     }
     // FEN string of default starting position
-    loadFEN("2R5/4bppk/1p1p4/5R1P/4PQ2/5P2/r4q1P/7K");
+    // loadFEN("2R5/4bppk/1p1p4/5R1P/4PQ2/5P2/r4q1P/7K");
+    loadFEN("rnbqkbnr/8/8/8/8/8/8/RNBQKBNR");
     turn = COLOURS.WHITE; // White starts first
 }
 
@@ -126,6 +129,8 @@ function clickCell(cell) {
         cellSelected = cell.id;
         // Set background to show it has been selected
         cell.style.backgroundColor = SQUARES.HIGHLIGHTED;
+
+        generateAllValidMoves(p, cell.id);
         return;
         
         
@@ -136,6 +141,7 @@ function clickCell(cell) {
             resetBackground(cellSelected)
             pieceSelected = ""
             cellSelected = ""
+            refreshCellBackgrounds();
             return;
         }
 
@@ -145,17 +151,20 @@ function clickCell(cell) {
             pieceSelected = p;
             cellSelected = cell.id;
             cell.style.backgroundColor = SQUARES.HIGHLIGHTED;
+            refreshCellBackgrounds();
+            generateAllValidMoves(p, cell.id);
             return;
         }
 
         // Is it a legal move?
-        if(isValidMove("", cellSelected, cell.id)) {
+        if(isValidMove(cell.id)) {
             document.getElementById(cellSelected).innerHTML = "";
             resetBackground(cellSelected);
             cell.innerHTML = pieceSelected;
             pieceSelected = "";
             cellSelected = "";
             advanceTurn();
+            refreshCellBackgrounds();
             return;
         }  
 
@@ -180,19 +189,139 @@ function isPieceSelected() {
 
 /**
  * 
+ * @param {PiecesType} HTMLpiece the innerHTML representation of a piece
+ * @param {String} start 
+ */
+function generateAllValidMoves(HTMLpiece, start) {
+    let list = [];
+    let piece = keyFromPiece[HTMLpiece];
+    let s = start.split(",");
+    let x = Number(s[0]);
+    let y = Number(s[1]);
+    let debug = document.getElementById("debug");
+
+    switch(piece) {
+        case "N": case "n": // Knight piece
+            for(var i = 0; i < 8; i++) {
+                let new_x = x + MOVES.KNIGHT[i][0];
+                let new_y = y + MOVES.KNIGHT[i][1];
+                let target = document.getElementById(new_x + "," + new_y);
+
+                if(!isValidSquare(new_x, new_y)) // Not a valid square
+                    continue;
+
+                if(target.innerHTML != "" && colourOfPiece(target.innerHTML) == turn) // Ally piece
+                    continue;
+
+                list.push(new_x + "," + new_y);
+            }
+            break;
+        case "R": case "r": // Rook piece
+            for(var i = 0; i < 4; i++) {
+                let new_x = x;
+                let new_y = y;
+                for(var j = 0; j < 8; j++) {
+                    new_x = new_x + MOVES.ROOK[i][0];
+                    new_y = new_y + MOVES.ROOK[i][1];
+                    let target = document.getElementById(new_x + "," + new_y);
+
+                    if(!isValidSquare(new_x, new_y)) // Not a valid square
+                        break;
+                    
+                    if(target.innerHTML == "") {
+                        list.push(new_x + "," + new_y);
+                    } else if(colourOfPiece(target.innerHTML) == turn) {
+                        break;
+                    } else {
+                        list.push(new_x + "," + new_y);
+                        break;
+                    }
+                }
+
+            }
+            break;
+            //
+        case "B": case "b": // Bishop piece
+            for(var i = 0; i < 4; i++) {
+                let new_x = x;
+                let new_y = y;
+                for(var j = 0; j < 8; j++) {
+                    new_x = new_x + MOVES.BISHOP[i][0];
+                    new_y = new_y + MOVES.BISHOP[i][1];
+                    let target = document.getElementById(new_x + "," + new_y);
+
+                    if(!isValidSquare(new_x, new_y)) // Not a valid square
+                        break;
+                    
+                    if(target.innerHTML == "") {
+                        list.push(new_x + "," + new_y);
+                    } else if(colourOfPiece(target.innerHTML) == turn) {
+                        break;
+                    } else {
+                        list.push(new_x + "," + new_y);
+                        break;
+                    }
+                }
+
+            }
+            break;
+        case "Q": case "q": // Queen piece
+            for(var i = 0; i < 8; i++) {
+                let new_x = x;
+                let new_y = y;
+                for(var j = 0; j < 8; j++) {
+                    new_x = new_x + MOVES.KING[i][0];
+                    new_y = new_y + MOVES.KING[i][1];
+                    let target = document.getElementById(new_x + "," + new_y);
+
+                    if(!isValidSquare(new_x, new_y)) // Not a valid square
+                        break;
+                    
+                    if(target.innerHTML == "") {
+                        list.push(new_x + "," + new_y);
+                    } else if(colourOfPiece(target.innerHTML) == turn) {
+                        break;
+                    } else {
+                        list.push(new_x + "," + new_y);
+                        break;
+                    }
+                }
+
+            }
+            break;
+        case "K": case"k": // Temporary
+            for(var i = 0; i < 8; i++) {
+                let new_x = x + MOVES.KING[i][0];
+                let new_y = y + MOVES.KING[i][1];
+                let target = document.getElementById(new_x + "," + new_y);
+
+                if(!isValidSquare(new_x, new_y)) // Not a valid square
+                    continue;
+
+                if(target.innerHTML != "" && colourOfPiece(target.innerHTML) == turn) // Ally piece
+                    continue;
+
+                list.push(new_x + "," + new_y);
+            }
+        default:
+            break;
+    }
+    for(var i = 0; i < list.length; i++) {
+        var temp = document.getElementById(list[i]);
+        temp.style.backgroundColor = "#00eece";
+        possibleMoves.push(list[i]);
+    }
+    return list;
+}
+
+/**
+ * 
  * @param {PiecesType} piece 
  * @param {string} start id of start cell
  * @param {string} end id of end cell
  */
-function isValidMove(piece, start, end) {
-    target = document.getElementById(end).innerHTML;
-    if(target == "") return true;
-    
-    if(colourOfPiece(target) != turn) {
-        return true;
-    }
-
-    return false;
+function isValidMove(end) {
+    return possibleMoves.includes(end);
 }
 
 /**
@@ -244,6 +373,18 @@ function resetBackground(cellId) {
         document.getElementById(cellId).style.backgroundColor = SQUARES.DARK;
     } else {
         document.getElementById(cellId).style.backgroundColor = SQUARES.LIGHT;
+    }
+}
+
+function refreshCellBackgrounds() {
+    if(possibleMoves.length < 1) {
+        return false;
+    } else {
+        for(var i = 0; i < possibleMoves.length ; i++) {
+            resetBackground(possibleMoves[i]);
+        }
+        possibleMoves = [];
+        return true;
     }
 }
 
