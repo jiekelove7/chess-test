@@ -1,5 +1,8 @@
-const nRows = 8;
-const nCols = 8;
+const NROWS = 8;
+const NCOLS = 8;
+const INIT = -1; // To initialise integers
+const WHITE_PAWN_START = 2;
+const BLACK_PAWN_START = 7;
 const PiecesType = {
     "P" : "♙",
     "p" : "♟",
@@ -33,7 +36,8 @@ const MOVES = {
     ROOK : [[-1, 0], [0, 1], [1, 0], [0, -1]],
     KNIGHT : [[-2, 1], [-1, 2], [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1]],
     BISHOP: [[-1, 1], [1, 1], [1, -1], [-1, -1]],
-    KING: [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]
+    KING: [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]],
+    PAWN: [[[0, 1], [-1, 1], [1, 1]], [[0, -1], [-1, -1], [1, -1]]]
     }
 
 const COLOURS = {
@@ -44,7 +48,8 @@ const COLOURS = {
 const SQUARES = {
     LIGHT : "#3de482",
     DARK : "#0e9747",
-    HIGHLIGHTED : "#0089fa"
+    HIGHLIGHTED : "#0089fa",
+    MOVES : "#00eece"
 }
 
 // Global Variables
@@ -53,6 +58,9 @@ let cellSelected = "";
 let turn = COLOURS.WHITE;
 let gameOver = false;
 let possibleMoves = [];
+let enPassant = [[false, false, false, false, false, false ,false, false],
+                    [false, false, false, false ,false, false, false, false]];
+let castle = [[false, false], [false, false]]; 
 
 
 function isNum(number) {
@@ -64,8 +72,8 @@ function initBoard() {
     let counter = 0; // Used for alternating black squares
 
     // Initialises background color of square and events
-    for(var i = 0; i < nRows; i++) {
-        for(var j = 0; j < nCols; j++) {
+    for(var i = 0; i < NROWS; i++) {
+        for(var j = 0; j < NCOLS; j++) {
             let cell = board.rows[i].cells[j];
             cell.id = "" + (j + 1) + "," + (8 - i);
             cell.onclick = function() {
@@ -80,8 +88,8 @@ function initBoard() {
         }
     }
     // FEN string of default starting position
-    // loadFEN("2R5/4bppk/1p1p4/5R1P/4PQ2/5P2/r4q1P/7K");
-    loadFEN("rnbqkbnr/8/8/8/8/8/8/RNBQKBNR");
+    loadFEN("2R5/4bppk/1p1p4/5R1P/4PQ2/5P2/r4q1P/7K");
+    // loadFEN("rnbqkbnr/8/8/8/8/8/8/RNBQKBNR");
     turn = COLOURS.WHITE; // White starts first
 }
 
@@ -195,10 +203,8 @@ function isPieceSelected() {
 function generateAllValidMoves(HTMLpiece, start) {
     let list = [];
     let piece = keyFromPiece[HTMLpiece];
-    let s = start.split(",");
-    let x = Number(s[0]);
-    let y = Number(s[1]);
-    let debug = document.getElementById("debug");
+    let x = Number(start[0]);
+    let y = Number(start[2]);
 
     switch(piece) {
         case "N": case "n": // Knight piece
@@ -303,15 +309,56 @@ function generateAllValidMoves(HTMLpiece, start) {
 
                 list.push(new_x + "," + new_y);
             }
-        default:
+            break;
+        default: // pawn
+            //
+            let moves = [];
+            let startRank = INIT;
+            if(isWhite(piece)) {
+                moves = MOVES.PAWN[0];
+                startRank = WHITE_PAWN_START;
+            } else {
+                moves = MOVES.PAWN[1];
+                startRank = BLACK_PAWN_START;
+            }
+            
+            for(var i = 0; i < 3; i++) {
+                let new_x = x + moves[i][0];
+                let new_y = y + moves[i][1];
+                
+                if(!isValidSquare(new_x, new_y)) // Not a valid square
+                    continue;
+                
+                let target = document.getElementById(new_x + "," + new_y);
+                
+                if(i == 0) { // Pushing pawn
+                    if(target.innerHTML == "")                    
+                        list.push(new_x + "," + new_y);
+                    
+                    if(y == startRank) {
+                        new_y = new_y + moves[i][1];
+                        target = document.getElementById(new_x + "," + new_y);
+                        if(target.innerHTML == "")                    
+                            list.push(new_x + "," + new_y);
+                    }
+                } else { // Taking a piece
+                    if(target.innerHTML != "" && colourOfPiece(target.innerHTML) != turn)
+                        list.push(new_x + "," + new_y);
+                }                
+            }
+
             break;
     }
     for(var i = 0; i < list.length; i++) {
         var temp = document.getElementById(list[i]);
-        temp.style.backgroundColor = "#00eece";
+        temp.style.backgroundColor = SQUARES.MOVES;
         possibleMoves.push(list[i]);
     }
     return list;
+}
+
+function isKingValid() {
+
 }
 
 /**
@@ -328,8 +375,8 @@ function isValidMove(end) {
  * @returns true if parameters signify a calid square
  */
 function isValidSquare() {
-    let x = -1
-    let y = -1
+    let x = INIT;
+    let y = INIT;
     // Cell.id was inputted
     if (arguments.length == 1) {
         let s = arguments[0].split(",");
@@ -397,8 +444,8 @@ function refreshCellBackgrounds() {
  */
 function loadFEN(FEN) {
     let counter = 0;
-    for(var i = 0; i < nRows; i++) {
-        for(var j = 0; j < nCols; j++) {
+    for(var i = 0; i < NROWS; i++) {
+        for(var j = 0; j < NCOLS; j++) {
             let char = FEN[counter];
             if(char == "/") {
                 counter++;
