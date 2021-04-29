@@ -97,6 +97,13 @@ function initBoard() {
     $("#input").submit((event) => {
         event.preventDefault();
         let FEN = $("#fen").val();
+        let regCheck = /([rnbqkp1-8]+\/){7}[rnbqkp1-8]+/ig.test(FEN);
+        if(!regCheck) {
+            alert("Your input is not formatted correctly and/or contains " +
+            "incorrect characters. \nInput should only contain the position " +
+            "of the pieces and not the turn order or castling status.");
+            return;
+        }
         let checked = $("#input input[type='radio']:checked").val();
         let color = (checked == "whitemove") ? COLOURS.WHITE: COLOURS.BLACK;
         loadFEN(FEN, color);
@@ -419,7 +426,7 @@ function colourOfPiece(piece) {
 }
 
 // Capital means white
-const isWhite = str => /^[A-Z]+$/.test(str);
+const isWhite = (str) => /^[A-Z]+$/.test(str);
 
 /**
  *  Naiive solution of 'un-highlighting' a cell
