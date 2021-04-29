@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <meta charset="UTF-8">
         <link rel="stylesheet" href="style.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script type="text/javascript" src="chess.js"></script>
     </head>
-    <body onload="initBoard()">
+    <body>
         <div class="header"> 
             <h1> A game of chess </h1>
         </div>
@@ -39,6 +41,21 @@
                     <th> A </th> <th> B </th> <th> C </th> <th> D </th> <th> E </th> <th> F </th> <th> G </th> <th>H </th> <th> </th>
                 </tr>
             </table>
+        </div>
+        <div class=formarea>
+            <form action="" method="GET" id="input"> 
+                <div>
+                    <label for="fen"> Enter FEN Here: </label>
+                    <input name="fen" id="fen" required>
+                </div>
+                <div>
+                    <input type="radio" id="whitemove" name="move" value="whitemove" checked="checked">
+                    <label for="whitemove"> White to move </label>
+                    <input type="radio" id="blackmove" name="move" value="blackmove">
+                    <label for="blackmove"> Black to move </label>
+                </div>
+                <button type="submit"> Submit </button>
+            </form>
         </div>
     </body>
 </html>

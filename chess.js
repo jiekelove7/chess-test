@@ -1,6 +1,6 @@
 const NROWS = 8;
 const NCOLS = 8;
-const INIT = -1; // To initialise integers
+const INT_INIT = -1; // To initialise integers
 const WHITE_PAWN_START = 2;
 const BLACK_PAWN_START = 7;
 const PiecesType = {
@@ -62,13 +62,15 @@ let enPassant = [[false, false, false, false, false, false ,false, false],
                     [false, false, false, false ,false, false, false, false]];
 let castle = [[false, false], [false, false]]; 
 
+// Initialise
+$(document).ready(initBoard);
 
 function isNum(number) {
     return !isNaN(number);
 }
 
 function initBoard() {
-    let board = document.getElementById("board");
+    let board = $("#board")[0];
     let counter = 0; // Used for alternating black squares
 
     // Initialises background color of square and events
@@ -87,10 +89,19 @@ function initBoard() {
                 counter ++;
         }
     }
+    turn = COLOURS.WHITE; // White starts first, should be replaced
     // FEN string of default starting position
-    loadFEN("2R5/4bppk/1p1p4/5R1P/4PQ2/5P2/r4q1P/7K");
+    loadFEN("2R5/4bppk/1p1p4/5R1P/4PQ2/5P2/r4q1P/7K", COLOURS.WHITE);
     // loadFEN("rnbqkbnr/8/8/8/8/8/8/RNBQKBNR");
-    turn = COLOURS.WHITE; // White starts first
+
+    $("#input").submit((event) => {
+        event.preventDefault();
+        let FEN = $("#fen").val();
+        let checked = $("#input input[type='radio']:checked").val();
+        let color = (checked == "whitemove") ? COLOURS.WHITE: COLOURS.BLACK;
+        loadFEN(FEN, color);
+    });
+    
 }
 
 function debugClickCell(cell) {
@@ -313,7 +324,7 @@ function generateAllValidMoves(HTMLpiece, start) {
         default: // pawn
             //
             let moves = [];
-            let startRank = INIT;
+            let startRank = INT_INIT;
             if(isWhite(piece)) {
                 moves = MOVES.PAWN[0];
                 startRank = WHITE_PAWN_START;
@@ -375,8 +386,8 @@ function isValidMove(end) {
  * @returns true if parameters signify a calid square
  */
 function isValidSquare() {
-    let x = INIT;
-    let y = INIT;
+    let x = INT_INIT;
+    let y = INT_INIT;
     // Cell.id was inputted
     if (arguments.length == 1) {
         let s = arguments[0].split(",");
@@ -442,7 +453,16 @@ function refreshCellBackgrounds() {
  * @param {string} FEN FEN string of position of pieces ONLY
  * @returns true - assumes no errors during processing
  */
-function loadFEN(FEN) {
+function loadFEN(FEN, colour) {
+    // Clear board
+    for(var i = 0; i < NROWS; i++) {
+        for(var j = 0; j < NCOLS; j++) {
+            let cell = board.rows[i].cells[j];
+            cell.id = "" + (j + 1) + "," + (8 - i);
+            cell.innerHTML = "";
+        }
+    }
+
     let counter = 0;
     for(var i = 0; i < NROWS; i++) {
         for(var j = 0; j < NCOLS; j++) {
@@ -460,5 +480,6 @@ function loadFEN(FEN) {
             }
         }
     }
+    turn = colour;
     return true;
 }
